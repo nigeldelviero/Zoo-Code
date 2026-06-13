@@ -194,7 +194,7 @@ export class ClineProvider
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "jun-2026-v3.58.0-zoo-gateway-gemini35flash-semble" // v3.58.0 Zoo Gateway, Gemini 3.5 Flash, Semble embedding
+	public readonly latestAnnouncementId = "jun-2026-v3.60.0-fable5-gpt55-mcp-allowlists-rootresolution" // v3.60.0 Fable 5, GPT-5.5, per-mode MCP allowlists, workspace rootResolution
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -849,6 +849,8 @@ export class ClineProvider
 			const viewStateDisposable = webviewView.onDidChangeViewState(() => {
 				if (this.view?.visible) {
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				} else {
+					this.logWebviewHiddenDiagnostics()
 				}
 			})
 
@@ -858,6 +860,8 @@ export class ClineProvider
 			const visibilityDisposable = webviewView.onDidChangeVisibility(() => {
 				if (this.view?.visible) {
 					this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+				} else {
+					this.logWebviewHiddenDiagnostics()
 				}
 			})
 
@@ -2923,6 +2927,21 @@ export class ClineProvider
 		}
 
 		return this.clineStack[this.clineStack.length - 1]
+	}
+
+	private logWebviewHiddenDiagnostics(): void {
+		const task = this.getCurrentTask()
+		if (!task || task.abort || task.abandoned) {
+			return
+		}
+		this.log(
+			`[Zoo Code] Webview hidden during active task.\n` +
+				`  taskId:       ${task.taskId}\n` +
+				`  messageCount: ${task.clineMessages.length}\n` +
+				`  stackDepth:   ${this.clineStack.length}\n` +
+				`  timestamp:    ${new Date().toISOString()}\n` +
+				`If the panel appears gray after this, share this log with support@zoocode.dev`,
+		)
 	}
 
 	public getRecentTasks(): string[] {
